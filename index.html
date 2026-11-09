@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Desert Stampede - Arizona Horse Racing</title>
+  <meta name="description" content="Race through the Arizona desert in Desert Stampede, a browser-based 3D horse racing game.">
+  <meta name="theme-color" content="#2C180C">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="game-container">
+    <!-- HUD Overlay -->
+    <div id="hud-container">
+      <!-- Top Left: Elapsed Race Timer -->
+      <div class="hud-timer" id="hud-timer">00:00.00</div>
+
+      <!-- Top Center: Current Lap -->
+      <div class="hud-lap" id="hud-lap">LAP 1/3</div>
+
+      <!-- Top Right: Race Position -->
+      <div class="hud-position" id="hud-position">
+        <span class="hud-pos-num">1</span><span class="hud-pos-suffix">st</span>
+      </div>
+
+      <!-- Bottom Left: Speedometer -->
+      <div class="hud-speed" id="hud-speed">
+        <span class="speed-val">0</span>
+        <span class="speed-unit">MPH</span>
+      </div>
+
+      <!-- Bottom Center: Minimap Radar -->
+      <div class="hud-minimap" id="hud-minimap">
+        <canvas id="minimap-canvas" width="180" height="180"></canvas>
+        <div class="minimap-player" id="minimap-player"></div>
+      </div>
+
+      <!-- Bottom Right: Stamina Gauge -->
+      <div class="hud-stamina" id="hud-stamina">
+        <div class="stamina-header">
+          <span class="stamina-title">STAMINA</span>
+          <span class="stamina-pct" id="stamina-pct">100%</span>
+        </div>
+        <div class="stamina-track">
+          <div class="stamina-fill" id="stamina-fill" style="width: 100%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UI Overlay (Menus, Countdown, Dialogs) -->
+    <div id="ui-container">
+      <!-- Title Screen -->
+      <div class="title-screen" id="title-screen">
+        <div class="title-content">
+          <h1 class="game-title">DESERT STAMPEDE</h1>
+          <p class="game-subtitle">Arizona Horse Racing</p>
+          <button class="btn-start" id="btn-start">START RACE</button>
+        </div>
+      </div>
+
+      <!-- 3-2-1-GO Countdown -->
+      <div class="countdown" id="countdown" style="display: none;">3</div>
+
+      <!-- Pause Menu -->
+      <div class="pause-screen" id="pause-screen" style="display: none;">
+        <div class="pause-dialog">
+          <h2 class="pause-title">PAUSED</h2>
+          <div class="pause-actions">
+            <button class="ui-btn btn-resume" id="btn-resume">RESUME</button>
+            <button class="ui-btn btn-restart" id="btn-restart">RESTART</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post-Race Results Screen -->
+      <div class="results-screen" id="results-screen" style="display: none;">
+        <div class="results-dialog">
+          <h2 class="results-title">RACE COMPLETE</h2>
+          <div class="results-table-wrap">
+            <table class="results-table" id="results-table">
+              <thead>
+                <tr>
+                  <th>POS</th>
+                  <th>HORSE</th>
+                  <th>TIME</th>
+                </tr>
+              </thead>
+              <tbody id="results-tbody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+          <button class="ui-btn btn-race-again" id="btn-race-again">RACE AGAIN</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3D WebGL Canvas -->
+    <canvas id="game-canvas"></canvas>
+  </div>
+
+  <!-- Entry Script -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
