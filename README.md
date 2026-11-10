@@ -2,7 +2,8 @@
 
 A browser-based 3D horse racing game set in the Arizona desert. The game uses
 vanilla JavaScript modules and Three.js 0.160.0 loaded from unpkg; there is no
-build step or server-side component.
+build step or server-side component. Background music is played from the
+bundled tracks in `music/`, in sequence on a loop.
 
 ## Run locally
 
@@ -16,9 +17,9 @@ Then open <http://localhost:8000>.
 
 ## Deploy with GitHub Pages
 
-The workflow in `.github/workflows/pages.yml` publishes only the app files
-(`index.html`, `css/`, and `js/`) when changes are pushed to `main`, or when
-manually started from the Actions tab.
+The workflow in `.github/workflows/pages.yml` publishes the app and music files
+(`index.html`, `css/`, `js/`, and `music/`) when changes are pushed to `main`,
+or when manually started from the Actions tab.
 
 For the first deployment, open the repository's **Settings → Pages** and set
 the build and deployment source to **GitHub Actions**. The workflow URL will
