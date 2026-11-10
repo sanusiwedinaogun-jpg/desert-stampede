@@ -1,8 +1,18 @@
 /**
- * Procedural Audio Manager
- * Generates all sound effects (hoof beats, desert wind, countdown beeps, fanfare)
- * procedurally via the Web Audio API without requiring any external audio files.
+ * Audio manager for procedural sound effects and the bundled music playlist.
  */
+
+const MUSIC_TRACKS = [
+  'Terminal Stride.m4a',
+  'Scorched Horizon.m4a',
+  'Salt and Steel.m4a',
+  'Red Clay Run.m4a',
+  'Red Clay Run (Take 2).m4a',
+  'Past the Ridge.m4a',
+  'Outrun the Wall.m4a',
+  'Outrun the Wall (Take 2).m4a',
+  'Flint and Thunder (Take 2).m4a'
+];
 
 export class AudioManager {
   constructor() {
@@ -10,6 +20,9 @@ export class AudioManager {
     this.masterGain = null;
     this.initialized = false;
     this.muted = false;
+    this.musicAudio = null;
+    this.musicTrackIndex = 0;
+    this.musicPaused = false;
 
     // Hoof beat state
     this.hoofInterval = null;
@@ -25,7 +38,7 @@ export class AudioManager {
     this.noiseBuffer = null;
   }
 
-  async init() {
+  init() {
     if (this.initialized) return;
 
     // Must be invoked after user interaction (pointer down / key press)
@@ -36,14 +49,6 @@ export class AudioManager {
     }
 
     this.ctx = new AudioContextClass();
-    if (this.ctx.state === 'suspended') {
-      try {
-        await this.ctx.resume();
-      } catch (err) {
-        console.warn('AudioContext resume failed:', err);
-      }
-    }
-
     this.masterGain = this.ctx.createGain();
     this.masterGain.connect(this.ctx.destination);
     this.masterGain.gain.setValueAtTime(0.3, this.ctx.currentTime);
@@ -51,6 +56,59 @@ export class AudioManager {
     this.createNoiseBuffer();
     this.startWind();
     this.initialized = true;
+
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(err => {
+        console.warn('AudioContext resume failed:', err);
+      });
+    }
+  }
+
+  startMusic() {
+    if (!this.initialized || this.muted || !this.ctx || this.musicAudio) return;
+
+    this.musicAudio = new Audio();
+    this.musicAudio.preload = 'auto';
+    const musicGain = this.ctx.createGain();
+    musicGain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+    musicGain.connect(this.masterGain);
+    this.ctx.createMediaElementSource(this.musicAudio).connect(musicGain);
+
+    this.musicAudio.addEventListener('ended', () => {
+      if (this.musicPaused) return;
+      this.musicTrackIndex = (this.musicTrackIndex + 1) % MUSIC_TRACKS.length;
+      this.musicAudio.src = this.getMusicTrackUrl();
+      this.musicAudio.play().catch(err => {
+        console.warn('Background music playback failed:', err);
+      });
+    });
+    this.musicAudio.addEventListener('error', () => {
+      console.error(`Unable to load background music: ${this.musicAudio.currentSrc}`);
+    });
+    this.musicAudio.src = this.getMusicTrackUrl();
+    this.musicAudio.play().catch(err => {
+      console.warn('Background music playback failed:', err);
+    });
+  }
+
+  getMusicTrackUrl() {
+    return new URL(`../music/${encodeURIComponent(MUSIC_TRACKS[this.musicTrackIndex])}`, import.meta.url).href;
+  }
+
+  pauseMusic() {
+    this.musicPaused = true;
+    this.musicAudio?.pause();
+  }
+
+  resumeMusic() {
+    this.musicPaused = false;
+    if (!this.musicAudio) {
+      this.startMusic();
+    } else if (!this.muted) {
+      this.musicAudio.play().catch(err => {
+        console.warn('Background music playback failed:', err);
+      });
+    }
   }
 
   createNoiseBuffer() {

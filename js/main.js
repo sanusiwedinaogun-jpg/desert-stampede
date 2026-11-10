@@ -142,6 +142,7 @@ function showTitle() {
     setRaceMode(selectedMode);
     aiManager.setDifficulty(selectedDifficulty);
     audio.init();
+    audio.startMusic();
     startRace();
   });
 }
@@ -404,18 +405,22 @@ function calculatePositions(allHorses) {
 function pauseGame() {
   state = STATE.PAUSED;
   controls.disable();
+  audio.pauseMusic();
 
   ui.showPause(
     () => {
       ui.hideAll();
       state = STATE.RACING;
       controls.enable();
+      audio.resumeMusic();
     },
     () => {
       ui.hideAll();
+      audio.resumeMusic();
       startRace();
     },
     () => {
+      audio.resumeMusic();
       returnToMainMenu();
     }
   );
