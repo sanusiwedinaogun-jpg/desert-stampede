@@ -175,7 +175,7 @@ export class AIManager {
       ai.currentSpeedVariance = lerp(ai.currentSpeedVariance, ai.targetSpeedVariance, 1 - Math.exp(-1.2 * dt));
 
       // Compute target speed
-      const baseTarget = (ai.baseSpeed + ai.currentSpeedVariance) * ai.rubberBandFactor;
+      let baseTarget = (ai.baseSpeed + ai.currentSpeedVariance) * ai.rubberBandFactor;
 
       // --- 3. RACING LINE & LATERAL OFFSET CHANGES ---
       ai.offsetTimer += dt;
@@ -247,9 +247,13 @@ export class AIManager {
       }
 
       // --- 6. TRACK NAVIGATION & STEERING ---
-      // Lookahead along track curve
       const speedNorm = clamp(horse.speed / 35, 0.2, 1.2);
-      const lookaheadT = (horse.trackProgress + (0.015 * speedNorm)) % 1.0;
+      const lookaheadDistance = lerp(7, 15, clamp(speedNorm, 0, 1));
+      const progressStep = lookaheadDistance / this.track.totalLength;
+      const aheadProgress = (progress) => this.track.isClosed
+        ? ((progress % 1) + 1) % 1
+        : clamp(progress, 0, 1);
+      const lookaheadT = aheadProgress(horse.trackProgress + progressStep);
 
       const trackPoint = this.track.getPointAt(lookaheadT);
       let tangent = new THREE.Vector3(0, 0, -1);
@@ -257,12 +261,22 @@ export class AIManager {
       if (typeof this.track.getTangentAt === 'function') {
         tangent = this.track.getTangentAt(lookaheadT).clone();
       } else {
-        const nextLookahead = (lookaheadT + 0.005) % 1.0;
+        const nextLookahead = aheadProgress(lookaheadT + 0.005);
         tangent = this.track.getPointAt(nextLookahead).clone().sub(trackPoint).normalize();
       }
 
       tangent.y = 0;
       tangent.normalize();
+
+      const cornerPreviewDistance = 20;
+      const previewT = aheadProgress(lookaheadT + cornerPreviewDistance / this.track.totalLength);
+      const previewTangent = this.track.getTangentAt(previewT).clone().setY(0).normalize();
+      const turnAngle = Math.acos(clamp(tangent.dot(previewTangent), -1, 1));
+      if (turnAngle > 0.01) {
+        const curveRadius = cornerPreviewDistance / turnAngle;
+        const safeCornerSpeed = Math.sqrt(18 * curveRadius);
+        baseTarget = Math.min(baseTarget, safeCornerSpeed);
+      }
 
       // Normal perpendicular to tangent in horizontal plane
       const trackNormal = new THREE.Vector3(-tangent.z, 0, tangent.x);

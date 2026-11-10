@@ -3,15 +3,15 @@
  */
 
 const MUSIC_TRACKS = [
-  'Terminal Stride.m4a',
-  'Scorched Horizon.m4a',
-  'Salt and Steel.m4a',
-  'Red Clay Run.m4a',
-  'Red Clay Run (Take 2).m4a',
-  'Past the Ridge.m4a',
-  'Outrun the Wall.m4a',
-  'Outrun the Wall (Take 2).m4a',
-  'Flint and Thunder (Take 2).m4a'
+  'Terminal Stride.mp3',
+  'Scorched Horizon.mp3',
+  'Salt and Steel.mp3',
+  'Red Clay Run.mp3',
+  'Red Clay Run (Take 2).mp3',
+  'Past the Ridge.mp3',
+  'Outrun the Wall.mp3',
+  'Outrun the Wall (Take 2).mp3',
+  'Flint and Thunder (Take 2).mp3'
 ];
 
 export class AudioManager {
@@ -21,7 +21,8 @@ export class AudioManager {
     this.initialized = false;
     this.muted = false;
     this.musicAudio = null;
-    this.musicTrackIndex = 0;
+    this.musicTrackIndex = -1;
+    this.musicQueue = [];
     this.musicPaused = false;
 
     // Hoof beat state
@@ -76,15 +77,31 @@ export class AudioManager {
 
     this.musicAudio.addEventListener('ended', () => {
       if (this.musicPaused) return;
-      this.musicTrackIndex = (this.musicTrackIndex + 1) % MUSIC_TRACKS.length;
-      this.musicAudio.src = this.getMusicTrackUrl();
-      this.musicAudio.play().catch(err => {
-        console.warn('Background music playback failed:', err);
-      });
+      this.playNextMusicTrack();
     });
     this.musicAudio.addEventListener('error', () => {
       console.error(`Unable to load background music: ${this.musicAudio.currentSrc}`);
     });
+    this.playNextMusicTrack();
+  }
+
+  playNextMusicTrack() {
+    if (this.musicQueue.length === 0) {
+      this.musicQueue = MUSIC_TRACKS.map((_, index) => index);
+      for (let i = this.musicQueue.length - 1; i > 0; i--) {
+        const swapIndex = Math.floor(Math.random() * (i + 1));
+        [this.musicQueue[i], this.musicQueue[swapIndex]] = [this.musicQueue[swapIndex], this.musicQueue[i]];
+      }
+
+      if (this.musicQueue.length > 1 && this.musicQueue[this.musicQueue.length - 1] === this.musicTrackIndex) {
+        [this.musicQueue[0], this.musicQueue[this.musicQueue.length - 1]] = [
+          this.musicQueue[this.musicQueue.length - 1],
+          this.musicQueue[0]
+        ];
+      }
+    }
+
+    this.musicTrackIndex = this.musicQueue.pop();
     this.musicAudio.src = this.getMusicTrackUrl();
     this.musicAudio.play().catch(err => {
       console.warn('Background music playback failed:', err);
